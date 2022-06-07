@@ -1,0 +1,82 @@
+﻿@page "/customtf"
+@using VFBlazor6._0.Utility
+@using VFBlazor6._0.Terraform
+@using Radzen.Blazor
+@using System.Collections.Generic;
+@inject IJSRuntime JsRuntime
+
+<h1>Custom environment creation</h1>
+
+<div class="col-md-6 col-lg-4 p-3">
+    <RadzenCard>
+        <h4 class="mb-4">Solution details</h4>
+        <RadzenTextBox Placeholder="Customer" @bind-Value=Customer Class="w-50" />
+        <RadzenTextBox Placeholder="Solution" @bind-Value=Solution Class="w-50" />
+        <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@Region Placeholder="Select region"
+                        Data=@regions Class="w-50" />
+    </RadzenCard>
+</div>
+
+<div class="col-md-6 col-lg-4 p-3">
+    <RadzenCard>
+        <table>
+            <tr>
+                <th><h4 class="mb-4">Resources</h4></th>
+            </tr>
+            <tr>
+                <td>Database</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Keyvault</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Kubernetes</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Network Security Group</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Resource groups</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Roleassignment</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+            <tr>
+                <td>Storage</td>
+                <td><RadzenSwitch @bind-Value=@test /></td>
+            </tr>
+        </table>
+    </RadzenCard>
+</div>
+
+<div class="col-md-6 col-lg-4 p-3">
+    <RadzenButton style="width: 160px" IsBusy=@busy Click=@SynthCustom Text="Create" />
+</div>
+
+@code
+{
+    bool busy = false;
+
+    IEnumerable<string> regions = FileOps.JsonFileToDict(FileOps._solutionDir + "/AzureData/AzureRegions.json").Keys;
+
+    string? Customer;
+    string? Solution;
+    string? Region;
+    bool test;
+    async Task SynthCustom()
+    {
+        busy = true;
+        await Task.Yield();
+        Terraform.CustomTF.Init(new NameGenerator(Customer, Solution, Region));
+        await JsRuntime.InvokeVoidAsync("alert", "The Terraform json plan has been generated");
+        //await JsRuntime.InvokeVoidAsync("alert", "clean the cdktf.out dir");
+        busy = false;
+        await Task.Yield();
+    }
+}
