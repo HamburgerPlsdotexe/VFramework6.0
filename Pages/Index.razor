@@ -1,114 +1,131 @@
 ﻿@page "/"
 
 @using Newtonsoft.Json
+@using System.Text.Json
 @using VFBlazor6._0.Terraform
 @using VFBlazor6._0.Utility
 @using Radzen.Blazor
 
-@inject IJSRuntime jsRuntime
+@inject IJSRuntime JsRuntime
+
 @inject NavigationManager navHelper
 @inject TooltipService tooltipService
+@inject NotificationService NotificationService
 
 <h1>Virtualisation Framework</h1>
 
-
-<p>
-    Would you like to make a new concept environment or deploy a default one?
-</p>
-
-<div class="col-2 p-3">
+<div class="col-lg-6 offset-lg-3">
     <RadzenCard>
-        <table>
-            <tr>
-                <td><RadzenButton Click=@visibleCard Text="Default" /></td>
-                <td><RadzenButton Click=@NavToCustom Text="Custom" ButtonStyle="ButtonStyle.Light" /></td>
-            </tr>
-        </table>
+                <RadzenButton Click=@NavToCustom Text="Create custom env" ButtonStyle="ButtonStyle.Light" />
     </RadzenCard>
 </div>
 
-<div class="col-6 p-3">
-    <RadzenCard Visible=vis class="col-md-6 col-lg-4 p-3">
-        <h4 class="mb-4">Solution details</h4>
-        <table>
-            <tr>
-                <td><RadzenTextBox Placeholder="Customer" Class="w-50" @bind-Value=userCustomer MaxLength="3" MouseEnter="@(args =>  ShowTooltip(args,
-                                                                            new TooltipOptions(){ Position = TooltipPosition.Right }))"/></td>
-            </tr>
-            <tr>
-                <td><RadzenTextBox Placeholder="Solution" Class="w-50" @bind-Value=userSolution MaxLength="3" MouseEnter="@(args =>  ShowTooltip(args,
-                                                                            new TooltipOptions(){ Position = TooltipPosition.Right }))"/></td>
-            </tr>
-            <tr>
-                <RadzenDropDown TValue="string" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@userRegion Placeholder="Select region"
-                                Data=regionsDict.Keys Class="w-50" Change="@visibleCard2"/>
-            </tr>
-        </table>
-    </RadzenCard>
-</div>
+<div class="container my-4">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <RadzenTemplateForm TItem="Environment" Data=@env Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>
+                <RadzenFieldset Text="Environment information">
+                    <div class="row mb-5">
+                        <div class="col-md-4">
+                            <RadzenLabel Text="Customer" />
+                            <small style="display: block">(3-3 characters)</small>
+                        </div>
+                        <div class="col">
+                            <RadzenTextBox style="display: block" Name="Customer" @bind-Value=@env.userCustomer Class="w-100" />
+                            <RadzenRequiredValidator Component="Customer" Text="Customer is required" Style="position: absolute" />
+                            <RadzenRegexValidator Component="Customer" Text="Customer abbreviation must be 3 letters" Pattern="[a-z]{3}|[A-Z]{3}" Style="position: absolute" />
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-4">
+                            <RadzenLabel Text="Solution" />
+                            <small style="display: block">(3-3 characters)</small>
+                        </div>
+                        <div class="col">
+                            <RadzenTextBox style="display: block" Name="Solution" @bind-Value=@env.userSolution Class="w-100" />
+                            <RadzenRequiredValidator Component="Solution" Text="Solution is required" Style="position: absolute" />
+                            <RadzenRegexValidator Component="Solution" Text="Solution abbreviation must be 3 letters" Pattern="[a-z]{3}|[A-Z]{3}" Style="position: absolute" />
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-4">
+                            <RadzenLabel Text="Region"></RadzenLabel>
+                            <small style="display: block">1 Region</small>
 
-<div class="col-2 p-3">
-    <RadzenCard Visible=vis2>
-        <table>
-            <tr>
-                <td><RadzenButton Click=@SynthDefault Text="Create" IsBusy=@busy Class="w-50"/></td>
-            </tr>
-        </table>
-    </RadzenCard>
+                        </div>
+                        <div class="col">
+                            <RadzenDropDown TValue="string" style="display: block" Name="Region" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@env.userRegion
+                                            Data=regionsDict.Keys Class="w-50" />
+                            <RadzenRequiredValidator Component="Region" Text="Region is required" Style="position: absolute" />
+                        </div>
+                    </div>
+                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Submit" ></RadzenButton>
+                </RadzenFieldset>
+            </RadzenTemplateForm>
+        </div>
+    </div>
 </div>
-
 
 @code {
 
     void ShowTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the customer", options);
     void ShowTooltip2(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the solution", options);
 
-    bool vis = false;
-    bool vis2 = false;
-
     bool busy = false;
+    bool disabled = false;
+
     static Dictionary<string, string> regionsDict;
+
+    async Task Disable()
+    {
+        disabled = true;
+    }
+    async Task Enable()
+    {
+        disabled = false;
+    }
+    async Task NavToCustom()
+    {
+        navHelper.NavigateTo("customtf");
+    }
+    async Task OnSubmit(Environment env)
+    {
+        Disable();
+        await Task.Yield();
+        FileOps.CleanUpOutFolder();
+        Terraform.DefaultTFTemplate.Init(new NameGenerator(env.userCustomer, env.userSolution, new string[]{env.userRegion, regionsDict[env.userRegion]}));
+        Alert("The Terraform JSON plan has been generated");
+        await Task.Yield();
+        Enable();
+        await Task.Yield();
+    }
+
+    private async Task Alert(string msg)
+    {
+        await JsRuntime.InvokeVoidAsync("alert", msg);
+    }
+
+    void ShowNotification(NotificationMessage message)
+    {
+        NotificationService.Notify(message);
+    }
+    class Environment
+    {
+        internal string userCustomer { get; set; }
+        internal string userSolution { get; set; }
+        internal string userRegion { get; set; }
+    }
+
+    Environment env = new();
 
     protected override async Task OnInitializedAsync()
     {
         regionsDict = FileOps.JsonFileToDict(FileOps._solutionDir + @"/AzureData/AzureRegions.json");
     }
 
-    string? userCustomer;
-    string? userSolution;
-    string? userRegion;
-
-    async Task<bool> jsonExists()
+    void OnInvalidSubmit()
     {
-        return false ? regionsDict.ContainsKey("error") : true;
+        Alert("Please check if everything is correct");
     }
-    async Task NavToCustom()
-    {
-        navHelper.NavigateTo("customtf");
-    }
-    async Task CleanAzureTF()
-    {
-        
-    }
-    async Task SynthDefault()
-    {
-        busy = true;
-        await Task.Yield();
-        //Debug.PrintDictContents(new NameGenerator(userCustomer, userSolution, regionsDict[userRegion]).GetResNames());
-        Terraform.DefaultTFTemplate.Init(new NameGenerator(userCustomer, userSolution, regionsDict[userRegion]));
-        await jsRuntime.InvokeVoidAsync("alert", "The Terraform files have been generated");
-        busy = false;
-        //FileOps.CleanUpOutFolder();
-        await Task.Yield();
-    }
-    async Task visibleCard()
-    {
-        vis = true;
-    }
-    async Task visibleCard2()
-    {
-        vis2 = true;
-    }
-
 }
 

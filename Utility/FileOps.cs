@@ -12,8 +12,8 @@ namespace VFBlazor6._0.Utility
         {
             try
             {
-                string path = _solutionDir + @"\cdktf.out\stacks\azure\";
-                
+                string path = _solutionDir + @"\cdktf.out\stacks\azure\cdk.tf.json";
+                File.Delete(path);
             }
             catch (Exception e)
             {

@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using VFBlazor6._0.Utility;
 using Radzen;
 using VFBlazor6._0.Data;
 
@@ -14,9 +11,7 @@ builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<TooltipService>();
 builder.Services.AddScoped<ContextMenuService>();
-//Debug.PrintDir();
-//Debug.PrintDirTree();
-//Console.WriteLine(File.Exists(FileOps._solutionDir + @"/AzureData/AzureRegions.json"));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

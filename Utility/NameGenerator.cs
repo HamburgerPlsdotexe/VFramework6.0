@@ -11,7 +11,7 @@ namespace VFBlazor6._0.Utility
 
         internal readonly string Customer;
         internal readonly string Solution;
-        internal readonly string Region;
+        internal readonly string[] Region;
         internal readonly string EnvKind;
 
         internal readonly string SubnetRole1;
@@ -25,7 +25,7 @@ namespace VFBlazor6._0.Utility
 
         private Dictionary<string, string> ResourceNames = new Dictionary<string, string>();
 
-        internal NameGenerator(string Customer, string Solution, string Region, string EnvKind="dev", string VMOs1= "w", string VMOs2="l", string SubnetRole1="web", string SubnetRole2="sql", string Database1="auth", string Database2="backlog")
+        internal NameGenerator(string Customer, string Solution, string[] Region, string EnvKind="devtest", string VMOs1= "w", string VMOs2="l", string SubnetRole1="web", string SubnetRole2="sql", string Database1="auth", string Database2="backlog")
         {
             this.Customer = Customer;
             this.Solution = Solution;
@@ -37,6 +37,10 @@ namespace VFBlazor6._0.Utility
             this.SubnetRole2 = SubnetRole2;
             this.Database1 = Database1;
             this.Database2 = Database2;
+            Console.WriteLine("Solution: " + Solution);
+            Console.WriteLine("Region: " + Region[1]);
+            Console.WriteLine("Abbreviation: " + RegionAbbreviation(Region[0]));
+            Console.WriteLine(EnvironmentName("long")); 
             FillDict();
         }
 
@@ -45,22 +49,30 @@ namespace VFBlazor6._0.Utility
             return ResourceNames;
         }
 
-        private string EnvironmentName(string variant, string role = "", string os = "")
+        internal string EnvironmentName(string variant, string role = "", string os = "", string env = "")
         {
-            switch ((variant, role))
+            switch ((variant, role, env))
             {
-                case ("long", ""):
-                    return Customer.ToLower() + Solution.ToLower() + "-" + Region.ToLower();    //E.g. cassys-we
+                case ("long", "", ""):
+                    return Customer.ToLower() + Solution.ToLower() + "-" + RegionAbbreviation(Region[0]);    //E.g. cassys-we
 
-                case ("short", ""):
-                    return Customer.ToLower() + Solution.ToLower();                             //E.g. cassys 
+                case ("short", "", ""):
+                    return Customer.ToLower() + Solution.ToLower();                                         //E.g. cassys 
+                        
+                case ("VM", "web", "") or ("VM", "sql", ""):
+                    return EnvironmentName("short", "") + RegionAbbreviation(Region[0]) + role + os;        //E.g. cassyswebwp 
 
-                case ("VM", "web") or ("VM", "sql"):
-                    return EnvironmentName("short", "") + Region + role + os;                   //E.g. cassyswebwp 
+                case ("long", "", "env"):
+                    return Customer.ToLower() + "-" + Solution.ToLower() + "-" + EnvKind;                   //E.g. cas-sys-devtest
 
                 default:
                     return "";
             }
+        }
+
+        private string RegionAbbreviation(string region)
+        {
+            return String.Join(String.Empty, region.Split(new[] { ' ' }).Select(word => word.First())).ToLower();
         }
 
         private void FillDict()

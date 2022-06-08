@@ -73,7 +73,7 @@
     {
         busy = true;
         await Task.Yield();
-        Terraform.CustomTF.Init(new NameGenerator(Customer, Solution, Region));
+        //Terraform.CustomTF.Init(new NameGenerator(Customer, Solution, Region));
         await JsRuntime.InvokeVoidAsync("alert", "The Terraform json plan has been generated");
         //await JsRuntime.InvokeVoidAsync("alert", "clean the cdktf.out dir");
         busy = false;
