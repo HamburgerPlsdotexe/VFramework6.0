@@ -7,15 +7,14 @@ namespace VFBlazor6._0.Terraform
 {
     public class DefaultTFTemplate : TerraformStack
     {
-
         internal DefaultTFTemplate(Construct scope, string id, NameGenerator ng) : base(scope, id)
         {
             new AzurermProvider(this, "AzureRm", new AzurermProviderConfig
             {
                 Features = new AzurermProviderFeatures(),
             });
-
-            new ResourceGroup(this, "azurm_resource_group", new ResourceGroupConfig
+            
+            new ResourceGroup(this, "azurerm_resource_group", new ResourceGroupConfig
             {
                 Name = ng.GetResNames()["RgName"],
                 Location = ng.Region[1],
@@ -27,6 +26,7 @@ namespace VFBlazor6._0.Terraform
 
             new VirtualNetwork(this, "azurerm_virtual_network", new VirtualNetworkConfig
             {
+                Id = "5",
                 Name = ng.GetResNames()["VNetName"],
                 Location = ng.Region[1],
                 ResourceGroupName = ng.GetResNames()["RgName"],
@@ -57,7 +57,7 @@ namespace VFBlazor6._0.Terraform
                 Name = ng.EnvironmentName("long", env: "env") + "",
                 ResourceGroupName = ng.GetResNames()["RgName"],
                 PrivateDnsZoneName = "azurerm_private_dns_zone.private-dns-zone",
-                VirtualNetworkId = "azurerm_virtual_network.vnet-aks.id"
+                VirtualNetworkId = "azurerm_virtual_network.Id"
             });
 
             new PrivateEndpoint(this, "azurerm_private_endpoint", new PrivateEndpointConfig

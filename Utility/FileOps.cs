@@ -33,5 +33,12 @@ namespace VFBlazor6._0.Utility
                 return new Dictionary<string, string>() { { "error" , e.ToString() } };
             }
         }
+
+        internal static long GetJsonFileSize()
+        {
+            long length = new FileInfo(_solutionDir + @"\cdktf.out\stacks\azure\cdk.tf.json").Length;
+
+            return length;
+        }
     }
 }
