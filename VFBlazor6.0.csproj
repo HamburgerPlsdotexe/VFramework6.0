@@ -19,13 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="cdktf.out\stacks\azure\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="wwwroot\cdk.tf.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Out\" />
   </ItemGroup>
 
 </Project>

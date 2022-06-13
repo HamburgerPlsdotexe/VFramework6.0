@@ -8,12 +8,9 @@
 @using Radzen.Blazor
 
 @inject IJSRuntime JsRuntime
-
 @inject NavigationManager navHelper
 @inject TooltipService tooltipService
 @inject NotificationService NotificationService
-
-<h1>Virtualisation Framework</h1>
 
 <div class="container my-4">
     <div class="col-lg-6 offset-lg-3">
@@ -56,15 +53,30 @@
 
                         </div>
                         <div class="col">
-                            <RadzenDropDown TValue="string" style="display: block" Name="Region" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@env.userRegion
+                            <RadzenDropDown TValue="string" style="display: block" Name="Region" AllowClear="true" AllowFiltering="true"
+                                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@env.userRegion
                                             Data=regionsDict.Keys Class="w-50" />
                             <RadzenRequiredValidator Component="Region" Text="Region is required" Style="position: absolute" />
                         </div>
                     </div>
-                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Submit"></RadzenButton>
+                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Generate"></RadzenButton>
                 </RadzenFieldset>
             </RadzenTemplateForm>
         </div>
+    </div>
+</div>
+<div class="container my-4">
+    <div class="col-lg-6 offset-lg-3">
+        <RadzenCard>
+            <h2>Follow-up</h2>
+            <ol>
+                <li>Unpack the zip somewhere on your machine</li>
+                <li>Edit the subnet prefix and IPs to your choice</li>
+                <li>Run the added .bat file</li>
+                <li>Check if the plan is to your liking</li>
+                <li>Push the plan using "Terraform apply" in the same folder</li>
+            </ol>
+        </RadzenCard>
     </div>
 </div>
 
@@ -75,34 +87,44 @@
 
     bool busy = false;
     bool disabled = false;
+    bool visible = false;
+
+    double progress = 0;
+
+    Environment env = new();
 
     static Dictionary<string, string> regionsDict;
 
-    async Task Disable()
+    void Disable()
     {
         disabled = true;
     }
-    async Task Enable()
+
+    void Enable()
     {
         disabled = false;
     }
+
     async Task NavToCustom()
     {
         navHelper.NavigateTo("customtf");
     }
+
     async Task OnSubmit(Environment env)
     {
+        visible = true;
         Disable();
         await Task.Yield();
-        FileOps.CleanUpOutFolder();
         Terraform.DefaultTFTemplate.Init(new NameGenerator(env.userCustomer, env.userSolution, new string[] { env.userRegion, regionsDict[env.userRegion] }));
-        Alert("The Terraform JSON plan has been generated, downloading...");
-        await Task.Yield();
+        FileOps.MoveFile(FileOps._jsonOldLoc, FileOps._jsonNewLoc);
+        FileOps.ZipFiles();
+        await Alert("The Terraform JSON plan has been generated, downloading...");
         await DownloadFileFromStream();
+        FileOps.CleanFiles();
+
         Enable();
         await Task.Yield();
     }
-
 
     private async Task Alert(string msg)
     {
@@ -113,40 +135,31 @@
     {
         NotificationService.Notify(message);
     }
-    class Environment
-    {
-        internal string userCustomer { get; set; }
-        internal string userSolution { get; set; }
-        internal string userRegion { get; set; }
-    }
-
-    Environment env = new();
 
     protected override async Task OnInitializedAsync()
     {
         regionsDict = FileOps.JsonFileToDict(FileOps._solutionDir + @"/AzureData/AzureRegions.json");
     }
 
-    void OnInvalidSubmit()
+    async void OnInvalidSubmit()
     {
-        Alert("Please check if everything is correct");
-    }
-    
-    private Stream GetFileStream()
-    {
-        byte[] binaryData  = new byte[FileOps.GetJsonFileSize()];
-        MemoryStream fileStream = new MemoryStream(binaryData);
-
-        return fileStream;
+        await Alert("Please check if everything is correct");
     }
 
     private async Task DownloadFileFromStream()
     {
-        var fileStream = GetFileStream();
-        var fileName = "cdk.tf.json";
+        var fileStream = FileOps.GetFileStream(FileOps._zipLoc);
+        var fileName = "EnvironmentFiles.zip";
 
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+
+    class Environment
+    {
+        internal string? userCustomer { get; set; }
+        internal string? userSolution { get; set; }
+        internal string? userRegion { get; set; }
     }
 }

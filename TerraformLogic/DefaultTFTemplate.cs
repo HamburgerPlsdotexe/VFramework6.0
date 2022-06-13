@@ -79,6 +79,57 @@ namespace VFBlazor6._0.Terraform
                     IsManualConnection = false,
                 }
             });
+
+            new KubernetesCluster(this, "azurerm_kubernetes_cluster", new KubernetesClusterConfig
+            {
+                Name = ng.GetResNames()["K8sName"],
+                Location = ng.Region[1],
+                DnsPrefix = "aks",
+                KubernetesVersion = "1.19.11",
+                ResourceGroupName = ng.GetResNames()["RgName"],
+
+                AddonProfile = new KubernetesClusterAddonProfile
+                {
+                    HttpApplicationRouting = new KubernetesClusterAddonProfileHttpApplicationRouting
+                    {
+                        Enabled = true
+                    }
+                },
+                OmsAgent = new KubernetesClusterOmsAgent
+                {
+                    LogAnalyticsWorkspaceId = id
+                    
+                },
+
+                DefaultNodePool = new KubernetesClusterDefaultNodePool
+                {
+                    Name = "systemnp",
+                    VmSize = "Standard_B2MS",
+                    OsDiskSizeGb = 50,
+                    EnableAutoScaling = true,
+                    MinCount = 1,
+                    MaxCount = 2,
+                    VnetSubnetId = "",
+                    MaxPods = 10,
+                    OrchestratorVersion = "1.19.11",
+                    AvailabilityZones = new string[] {"1","2","3"}
+                }
+            });
+
+            new KubernetesClusterNodePool(this, "azurerm_kubernetes_cluster_node_pool", new KubernetesClusterNodePoolConfig
+            {
+                Name = "winnp",
+                OsType = "Windows",
+                KubernetesClusterId = "awwyip",
+                VmSize = "Standard_B2MS",
+                EnableAutoScaling = true,
+                OsDiskSizeGb = 50,
+                MinCount = 1,
+                MaxCount = 2,
+                VnetSubnetId =  "",
+                MaxPods = 10,
+                OrchestratorVersion = "1.19.11"
+            });
         }
 
         internal static void Init(NameGenerator ng)

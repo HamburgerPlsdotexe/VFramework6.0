@@ -102,6 +102,7 @@ namespace VFBlazor6._0.Utility
             ResourceNames.Add("SQLServName", EnvironmentName("long") + "-" + EnvKind + "-" + SubnetRole2 + "-server-" + counter.ToString("D2"));
             ResourceNames.Add("DTBName1", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-" + Database1);
             ResourceNames.Add("DTBName2", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-" + Database2);
+            ResourceNames.Add("K8sName", EnvironmentName("long") + "-aks");
             counter++;
         }
     }

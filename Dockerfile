@@ -13,7 +13,6 @@ WORKDIR /src
 COPY ["VFBlazor6.0.csproj", "."]
 RUN dotnet restore "./VFBlazor6.0.csproj"
 COPY . .
-WORKDIR "/src/."
 RUN dotnet build "VFBlazor6.0.csproj" -c Release -o /app/build
 
 FROM build AS publish
