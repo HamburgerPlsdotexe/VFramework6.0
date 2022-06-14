@@ -130,6 +130,10 @@ Desktop.ini
 .bin/
 .vs/
 .terraform/
+cdktf.out/stacks/Kubernetes/
+cdktf.out/stacks/Network/
+cdktf.out/stacks/ResourceGroup/
+cdktf.out/stacks/Storage/
 
 # Custom files
 cdktf.out/stacks/azure/.terraform.lock.hcl

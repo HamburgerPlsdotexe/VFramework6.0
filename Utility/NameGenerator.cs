@@ -57,7 +57,7 @@ namespace VFBlazor6._0.Utility
                     return Customer.ToLower() + Solution.ToLower() + "-" + RegionAbbreviation(Region[0]);    //E.g. cassys-we
 
                 case ("short", "", ""):
-                    return Customer.ToLower() + Solution.ToLower();                                         //E.g. cassys 
+                    return Customer.ToLower() + Solution.ToLower() + RegionAbbreviation(Region[0]) + EnvKind;          //E.g. cassys 
                         
                 case ("VM", "web", "") or ("VM", "sql", ""):
                     return EnvironmentName("short", "") + RegionAbbreviation(Region[0]) + role + os;        //E.g. cassyswebwp 
@@ -87,7 +87,7 @@ namespace VFBlazor6._0.Utility
             ResourceNames.Add("KeyVault", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-KeyVault");
             ResourceNames.Add("Automation", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-Automation");
             ResourceNames.Add("Integration", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-Integration");
-            ResourceNames.Add("Storage", EnvironmentName("short") + Region + EnvKind + "storage");
+            ResourceNames.Add("Storage", EnvironmentName("short")  + "storage");
             ResourceNames.Add("VM1AS", EnvironmentName("VM", SubnetRole1, VMOs1) + "-as");
             ResourceNames.Add("VM1", EnvironmentName("VM", SubnetRole1, VMOs1) + EnvKind[0] + counter.ToString("D2"));
             ResourceNames.Add("VM1NIC", EnvironmentName("VM", SubnetRole1, VMOs1) + EnvKind[0] + counter.ToString("D2") + "-nic-" + counter.ToString("D2"));

@@ -6,6 +6,7 @@ namespace VFBlazor6._0.Utility
     static class FileOps
     {
         internal static string _solutionDir = Directory.GetCurrentDirectory();
+        internal static string _batLoc = _solutionDir + @"\Files\AutomatedEnvironmentPlanner.bat";
         internal static string _jsonOldLoc = _solutionDir + @"\cdktf.out\stacks\azure\cdk.tf.json";
         internal static string _jsonNewLoc = _solutionDir + @"\Files\cdk.tf.json";
         internal static string _zipLoc = _solutionDir + @"\Out\EnvironmentFiles.zip ";
@@ -14,8 +15,9 @@ namespace VFBlazor6._0.Utility
         {
             try
             {
+                if(File.Exists(_batLoc))
                 File.Delete(_jsonNewLoc);
-                File.Delete(_zipLoc);
+                //File.Delete(_zipLoc);
             }
             catch (Exception e)
             {

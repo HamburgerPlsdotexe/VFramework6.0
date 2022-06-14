@@ -1,6 +1,7 @@
 ﻿using Constructs;
 using HashiCorp.Cdktf;
 using HashiCorp.Cdktf.Providers.Azurerm;
+using VFBlazor6._0.TerraformLogic;
 using VFBlazor6._0.Utility;
 
 namespace VFBlazor6._0.Terraform
@@ -9,132 +10,21 @@ namespace VFBlazor6._0.Terraform
     {
         internal DefaultTFTemplate(Construct scope, string id, NameGenerator ng) : base(scope, id)
         {
-            new AzurermProvider(this, "AzureRm", new AzurermProviderConfig
+
+            AzurermProvider azurermProvider = new (this, "AzureRm", new AzurermProviderConfig
             {
                 Features = new AzurermProviderFeatures(),
             });
-            
-            new ResourceGroup(this, "azurerm_resource_group", new ResourceGroupConfig
-            {
-                Name = ng.GetResNames()["RgName"],
-                Location = ng.Region[1],
-                Tags = new Dictionary<string, string> {
-                    { "application", ng.EnvironmentName("long")},
-                    {"environment", ng.EnvironmentName("long", env:"env") }
-                }
-            });
-
-            new VirtualNetwork(this, "azurerm_virtual_network", new VirtualNetworkConfig
-            {
-                Id = "5",
-                Name = ng.GetResNames()["VNetName"],
-                Location = ng.Region[1],
-                ResourceGroupName = ng.GetResNames()["RgName"],
-                AddressSpace = new[] { "10.0.0.0/16" },
-                Tags = new Dictionary<string, string> {
-                    { "application", ng.EnvironmentName("long")},
-                    {"environment", ng.EnvironmentName("long", env:"env") }
-                }
-            });
-
-            new Subnet(this, "azurerm_subnet", new SubnetConfig
-            {
-                Name = ng.GetResNames()["VNetSubnet1"],
-                AddressPrefixes = new string[] {""},
-                VirtualNetworkName = ng.GetResNames()["VNetName"],
-                ResourceGroupName = ng.GetResNames()["RgName"],
-                EnforcePrivateLinkEndpointNetworkPolicies = true,
-            });
-
-            new PrivateDnsZone(this, "azurerm_private_dns_zone", new PrivateDnsZoneConfig
-            {
-                Name = "privatelink.file.core.windows.net",
-                ResourceGroupName = ng.GetResNames()["RgName"]
-            });
-
-            new PrivateDnsZoneVirtualNetworkLink(this, "azurerm_private_dns_zone_virtual_network_link", new PrivateDnsZoneVirtualNetworkLinkConfig
-            {
-                Name = ng.EnvironmentName("long", env: "env") + "",
-                ResourceGroupName = ng.GetResNames()["RgName"],
-                PrivateDnsZoneName = "azurerm_private_dns_zone.private-dns-zone",
-                VirtualNetworkId = "azurerm_virtual_network.Id"
-            });
-
-            new PrivateEndpoint(this, "azurerm_private_endpoint", new PrivateEndpointConfig
-            {
-                Name = ng.EnvironmentName("long", env: "env"),
-                Location = ng.Region[1],
-                ResourceGroupName = ng.GetResNames()["RgName"],
-                SubnetId = "azurerm_subnet.services-network-subnet.id",
-
-                PrivateDnsZoneGroup = new PrivateEndpointPrivateDnsZoneGroup
-                {
-                    Name = "azurerm_private_dns_zone.private-dns-zone",
-                    PrivateDnsZoneIds = new string[] { "privatelink.file.core.windows.net" }
-                },
-
-                PrivateServiceConnection = new PrivateEndpointPrivateServiceConnection
-                {
-                    Name = ng.EnvironmentName("long", env:"env") + "-private-service-connection-file-share",
-                    IsManualConnection = false,
-                }
-            });
-
-            new KubernetesCluster(this, "azurerm_kubernetes_cluster", new KubernetesClusterConfig
-            {
-                Name = ng.GetResNames()["K8sName"],
-                Location = ng.Region[1],
-                DnsPrefix = "aks",
-                KubernetesVersion = "1.19.11",
-                ResourceGroupName = ng.GetResNames()["RgName"],
-
-                AddonProfile = new KubernetesClusterAddonProfile
-                {
-                    HttpApplicationRouting = new KubernetesClusterAddonProfileHttpApplicationRouting
-                    {
-                        Enabled = true
-                    }
-                },
-                OmsAgent = new KubernetesClusterOmsAgent
-                {
-                    LogAnalyticsWorkspaceId = id
-                    
-                },
-
-                DefaultNodePool = new KubernetesClusterDefaultNodePool
-                {
-                    Name = "systemnp",
-                    VmSize = "Standard_B2MS",
-                    OsDiskSizeGb = 50,
-                    EnableAutoScaling = true,
-                    MinCount = 1,
-                    MaxCount = 2,
-                    VnetSubnetId = "",
-                    MaxPods = 10,
-                    OrchestratorVersion = "1.19.11",
-                    AvailabilityZones = new string[] {"1","2","3"}
-                }
-            });
-
-            new KubernetesClusterNodePool(this, "azurerm_kubernetes_cluster_node_pool", new KubernetesClusterNodePoolConfig
-            {
-                Name = "winnp",
-                OsType = "Windows",
-                KubernetesClusterId = "awwyip",
-                VmSize = "Standard_B2MS",
-                EnableAutoScaling = true,
-                OsDiskSizeGb = 50,
-                MinCount = 1,
-                MaxCount = 2,
-                VnetSubnetId =  "",
-                MaxPods = 10,
-                OrchestratorVersion = "1.19.11"
-            });
+ 
         }
 
-        internal static void Init(NameGenerator ng)
+        internal static void Synthesise(NameGenerator ng)
         {
             HashiCorp.Cdktf.App app = new();
+            ResourceGroups resourceGroup = new(app, "ResourceGroup", ng);
+            Networking networking = new(app, "Network", ng, resourceGroup);
+            Kubernetes kubernetes = new(app, "Kubernetes", ng, networking, resourceGroup);
+            StorageAccounts storageAccounts = new(app, "Storage", ng, networking, resourceGroup);
             new DefaultTFTemplate(app, "azure", ng);
             app.Synth();
         }

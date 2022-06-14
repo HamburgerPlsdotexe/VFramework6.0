@@ -23,7 +23,7 @@
     <div class="row">
         <div class="col-lg-6 offset-lg-3">
             <RadzenTemplateForm TItem="Environment" Data=@env Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>
-                <RadzenFieldset Text="Environment information">
+                <RadzenFieldset Text="Default Environment Information">
                     <div class="row mb-5">
                         <div class="col-md-4">
                             <RadzenLabel Text="Customer" />
@@ -59,7 +59,9 @@
                             <RadzenRequiredValidator Component="Region" Text="Region is required" Style="position: absolute" />
                         </div>
                     </div>
-                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Generate"></RadzenButton>
+                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Generate" />
+                    <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Button" Click=@DownloadBat ButtonStyle="ButtonStyle.Secondary" Text="Get .bat" 
+                    MouseEnter="@(args => ShowTooltip3(args, new TooltipOptions(){ Duration = 20000, Position = TooltipPosition.Right }))" />
                 </RadzenFieldset>
             </RadzenTemplateForm>
         </div>
@@ -84,10 +86,10 @@
 
     void ShowTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the customer, no spaces", options);
     void ShowTooltip2(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the solution, no spaces", options);
+    void ShowTooltip3(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "The .bat contains an automated plan script which initialises and plans for you", options);
 
     bool busy = false;
     bool disabled = false;
-    bool visible = false;
 
     double progress = 0;
 
@@ -112,18 +114,24 @@
 
     async Task OnSubmit(Environment env)
     {
-        visible = true;
         Disable();
         await Task.Yield();
-        Terraform.DefaultTFTemplate.Init(new NameGenerator(env.userCustomer, env.userSolution, new string[] { env.userRegion, regionsDict[env.userRegion] }));
+        Terraform.DefaultTFTemplate.Synthesise(new NameGenerator(env.userCustomer, env.userSolution, new string[] { env.userRegion, regionsDict[env.userRegion] }));
         FileOps.MoveFile(FileOps._jsonOldLoc, FileOps._jsonNewLoc);
-        FileOps.ZipFiles();
         await Alert("The Terraform JSON plan has been generated, downloading...");
-        await DownloadFileFromStream();
+        await DownloadFileFromStream("cdk.tf.json", FileOps._jsonNewLoc);
         FileOps.CleanFiles();
-
         Enable();
         await Task.Yield();
+    }
+
+    async Task DownloadBat()
+    {
+        Disable();
+        await Task.Yield();
+        await DownloadFileFromStream("AutomatedEnvironmentPlanner.bat", FileOps._batLoc);
+        Enable();
+
     }
 
     private async Task Alert(string msg)
@@ -146,10 +154,10 @@
         await Alert("Please check if everything is correct");
     }
 
-    private async Task DownloadFileFromStream()
+    private async Task DownloadFileFromStream(string file, string Fileloc)
     {
-        var fileStream = FileOps.GetFileStream(FileOps._zipLoc);
-        var fileName = "EnvironmentFiles.zip";
+        var fileStream = FileOps.GetFileStream(Fileloc);
+        var fileName = file;
 
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
