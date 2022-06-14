@@ -6,17 +6,9 @@ using VFBlazor6._0.Utility;
 
 namespace VFBlazor6._0.Terraform
 {
-    public class DefaultTFTemplate : TerraformStack
+    public class DefaultTFTemplate
     {
-        internal DefaultTFTemplate(Construct scope, string id, NameGenerator ng) : base(scope, id)
-        {
-
-            AzurermProvider azurermProvider = new (this, "AzureRm", new AzurermProviderConfig
-            {
-                Features = new AzurermProviderFeatures(),
-            });
- 
-        }
+        internal DefaultTFTemplate(){}
 
         internal static void Synthesise(NameGenerator ng)
         {
@@ -25,7 +17,6 @@ namespace VFBlazor6._0.Terraform
             Networking networking = new(app, "Network", ng, resourceGroup);
             Kubernetes kubernetes = new(app, "Kubernetes", ng, networking, resourceGroup);
             StorageAccounts storageAccounts = new(app, "Storage", ng, networking, resourceGroup);
-            new DefaultTFTemplate(app, "azure", ng);
             app.Synth();
         }
     }

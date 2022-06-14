@@ -15,7 +15,7 @@ namespace VFBlazor6._0.Terraform
             {
                 Features = new AzurermProviderFeatures(),
             });
-            
+
             ResourceGroup RG = new ResourceGroup(this, "azurerm_resource_group", new ResourceGroupConfig
             {
                 Name = ng.GetResNames()["RgName"],
@@ -67,7 +67,7 @@ namespace VFBlazor6._0.Terraform
             Subnet Sbnet = new Subnet(this, "azurerm_subnet", new SubnetConfig
             {
                 Name = ng.GetResNames()["VNetSubnet1"],
-                AddressPrefixes = new string[] {"aks"},
+                AddressPrefixes = new string[] { "aks" },
                 VirtualNetworkName = Vnet.Name,
                 ResourceGroupName = RG.Name,
                 EnforcePrivateLinkEndpointNetworkPolicies = true,
@@ -102,7 +102,7 @@ namespace VFBlazor6._0.Terraform
 
                 PrivateServiceConnection = new PrivateEndpointPrivateServiceConnection
                 {
-                    Name = ng.EnvironmentName("long", env:"env") + "-private-service-connection-file-share",
+                    Name = ng.EnvironmentName("long", env: "env") + "-private-service-connection-file-share",
                     PrivateConnectionResourceId = SA.Id,
                     IsManualConnection = false,
                 }
@@ -115,8 +115,8 @@ namespace VFBlazor6._0.Terraform
                 DnsPrefix = "aks",
                 KubernetesVersion = "1.19.11",
                 ResourceGroupName = RG.Name,
-                
-                Identity = new KubernetesClusterIdentity 
+
+                Identity = new KubernetesClusterIdentity
                 {
                     Type = "SystemAssigned",
                 },
@@ -137,7 +137,7 @@ namespace VFBlazor6._0.Terraform
                     MaxCount = 2,
                     MaxPods = 10,
                     OrchestratorVersion = "1.19.11",
-                    AvailabilityZones = new string[] {"1","2","3"}
+                    AvailabilityZones = new string[] { "1", "2", "3" }
                 }
             });
 
