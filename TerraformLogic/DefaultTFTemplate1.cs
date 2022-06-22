@@ -1,15 +1,15 @@
-﻿/*using Constructs;
+﻿using Constructs;
 using HashiCorp.Cdktf;
 using HashiCorp.Cdktf.Providers.Azurerm;
 using VFBlazor6._0.Utility;
 
 namespace VFBlazor6._0.Terraform
 {
-    public class DefaultTFTemplate : TerraformStack
+    public class DefaultTFTemplate1 : TerraformStack
     {
         string[] _ips = new string[] { "111.111.111.000", "111.111.111.001" };
 
-        internal DefaultTFTemplate(Construct scope, string id, NameGenerator ng) : base(scope, id)
+        internal DefaultTFTemplate1(Construct scope, string id, NameGenerator ng) : base(scope, id)
         {
             new AzurermProvider(this, "AzureRm", new AzurermProviderConfig
             {
@@ -121,11 +121,6 @@ namespace VFBlazor6._0.Terraform
                     Type = "SystemAssigned",
                 },
 
-                OmsAgent = new KubernetesClusterOmsAgent
-                {
-                    LogAnalyticsWorkspaceId = ""
-                },
-
                 DefaultNodePool = new KubernetesClusterDefaultNodePool
                 {
                     Name = "systemnp",
@@ -155,16 +150,13 @@ namespace VFBlazor6._0.Terraform
                 MaxPods = 10,
                 OrchestratorVersion = "1.19.11"
             });
-
-
         }
 
-        internal static void Init(NameGenerator ng)
+        internal static void Synthesise(NameGenerator ng)
         {
             HashiCorp.Cdktf.App app = new();
-            new DefaultTFTemplate(app, "azure", ng);
+            new DefaultTFTemplate1(app, "azure", ng);
             app.Synth();
         }
     }
 }
-*/

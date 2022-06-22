@@ -8,7 +8,7 @@ namespace VFBlazor6._0.Terraform
 {
     public class DefaultTFTemplate
     {
-        internal DefaultTFTemplate(){}
+        internal DefaultTFTemplate() { }
 
         internal static void Synthesise(NameGenerator ng)
         {

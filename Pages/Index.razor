@@ -117,9 +117,9 @@
         Disable();
         await Task.Yield();
         Terraform.DefaultTFTemplate.Synthesise(new NameGenerator(env.userCustomer, env.userSolution, new string[] { env.userRegion, regionsDict[env.userRegion] }));
-        FileOps.MoveFile(FileOps._jsonOldLoc, FileOps._jsonNewLoc);
+        //FileOps.MoveFile(FileOps._jsonOldLoc, FileOps._jsonNewLoc);
         await Alert("The Terraform JSON plan has been generated, downloading...");
-        await DownloadFileFromStream("cdk.tf.json", FileOps._jsonNewLoc);
+       // await DownloadFileFromStream("cdk.tf.json", FileOps._jsonNewLoc);
         FileOps.CleanFiles();
         Enable();
         await Task.Yield();
