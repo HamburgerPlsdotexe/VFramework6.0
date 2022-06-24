@@ -5,38 +5,45 @@ using System.Threading.Tasks;
 
 namespace VFBlazor6._0.Utility
 {
+    /// <summary>
+    /// The NameGenerator class is passed to multiple resource classes of Terraform
+    /// in order to adhere by the naming conventions of operations.
+    /// The result of the class is simply an object, which usually calls GetResNames() 
+    /// which in turn, returns a dictionary containing all the names of the resources.
+    /// </summary>
     internal class NameGenerator
     {
         static int counter;
 
-        internal readonly string Customer;
-        internal readonly string Solution;
-        internal readonly string[] Region;
-        internal readonly string EnvKind;
+        internal readonly string _customer;
+        internal readonly string _solution;
+        internal readonly string[] _region;
+        internal readonly string _envKind;
 
-        internal readonly string SubnetRole1;
-        internal readonly string SubnetRole2;
+        internal readonly string _subnetRole1;
+        internal readonly string _subnetRole2;
 
-        internal readonly string VMOs1;
-        internal readonly string VMOs2;
+        internal readonly string _vmOs1;
+        internal readonly string _vmOs2;
 
-        internal readonly string Database1;
-        internal readonly string Database2;
+        internal readonly string _database1;
+        internal readonly string _database2;
 
-        private Dictionary<string, string> ResourceNames = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _resourceNames = new Dictionary<string, string>();
 
-        internal NameGenerator(string Customer, string Solution, string[] Region, string EnvKind="devtest", string VMOs1= "w", string VMOs2="l", string SubnetRole1="web", string SubnetRole2="sql", string Database1="auth", string Database2="backlog")
+        internal NameGenerator(string Customer, string Solution, string[] Region, string EnvKind="devtest", 
+            string VMOs1= "w", string VMOs2="l", string SubnetRole1="web", string SubnetRole2="sql", string Database1="auth", string Database2="backlog")
         {
-            this.Customer = Customer;
-            this.Solution = Solution;
-            this.Region = Region;
-            this.EnvKind = EnvKind;
-            this.VMOs1 = VMOs1;
-            this.VMOs2 = VMOs2;
-            this.SubnetRole1 = SubnetRole1;
-            this.SubnetRole2 = SubnetRole2;
-            this.Database1 = Database1;
-            this.Database2 = Database2;
+            _customer = Customer;
+            _solution = Solution;
+            _region = Region;
+            _envKind = EnvKind;
+            _vmOs1 = VMOs1;
+            _vmOs2 = VMOs2;
+            _subnetRole1 = SubnetRole1;
+            _subnetRole2 = SubnetRole2;
+            _database1 = Database1;
+            _database2 = Database2;
             Console.WriteLine("Solution: " + Solution);
             Console.WriteLine("Region: " + Region[1]);
             Console.WriteLine("Abbreviation: " + RegionAbbreviation(Region[0]));
@@ -44,65 +51,89 @@ namespace VFBlazor6._0.Utility
             FillDict();
         }
 
-        public Dictionary<string, string> GetResNames()
+        /// <summary>
+        /// Getter of the dictionary containing all the names of the resources
+        /// </summary>
+        /// <returns></returns>
+        internal Dictionary<string, string> GetResNames()
         {
-            return ResourceNames;
+            return _resourceNames;
         }
 
+        /// <summary>
+        /// The EnvironmentName method creates the intial part 
+        /// of a resource's entire name 
+        /// based on a few parameters
+        /// </summary>
+        /// <param name="variant"> can be either long or short </param>
+        /// <param name="role"> can be either web or sql</param>
+        /// <param name="os"> can be either l or w</param>
+        /// <param name="env"> can be either prod or env or empty </param>
+        /// <returns>E.g. "cassys-we" </returns>
         internal string EnvironmentName(string variant, string role = "", string os = "", string env = "")
         {
             switch ((variant, role, env))
             {
                 case ("long", "", ""):
-                    return Customer.ToLower() + Solution.ToLower() + "-" + RegionAbbreviation(Region[0]);    //E.g. cassys-we
+                    return _customer.ToLower() + _solution.ToLower() + "-" + RegionAbbreviation(_region[0]);    //E.g. cassys-we
 
                 case ("short", "", ""):
-                    return Customer.ToLower() + Solution.ToLower() + RegionAbbreviation(Region[0]) + EnvKind;          //E.g. cassys 
+                    return _customer.ToLower() + _solution.ToLower() + RegionAbbreviation(_region[0]) + _envKind;//E.g. cassys 
                         
                 case ("VM", "web", "") or ("VM", "sql", ""):
-                    return EnvironmentName("short", "") + RegionAbbreviation(Region[0]) + role + os;        //E.g. cassyswebwp 
+                    return EnvironmentName("short", "") + RegionAbbreviation(_region[0]) + role + os;           //E.g. cassyswebwp 
 
                 case ("long", "", "env"):
-                    return Customer.ToLower() + "-" + Solution.ToLower() + "-" + EnvKind;                   //E.g. cas-sys-devtest
+                    return _customer.ToLower() + "-" + _solution.ToLower() + "-" + _envKind;                   //E.g. cas-sys-devtest
 
                 default:
                     return "";
             }
         }
 
+        /// <summary>
+        /// Creates an abbreviation which is the product of an 
+        /// Azure region's entire name. This region name
+        /// is obtained through the index, input by the user.
+        /// </summary>
+        /// <param name="region"> </param>
+        /// <returns>E.g. "we" for West Europe </returns>
         private string RegionAbbreviation(string region)
         {
             return String.Join(String.Empty, region.Split(new[] { ' ' }).Select(word => word.First())).ToLower();
         }
-
+        /// <summary>
+        /// Fills the dictionary which will contain all of the resource names for an environment.
+        /// Based on the naming conventions of operations.
+        /// </summary>
         private void FillDict()
         {
-            ResourceNames.Add("RgName", EnvironmentName("long") + "-" + EnvKind + "-rg");
-            ResourceNames.Add("VNetName", EnvironmentName("long") + "-" + EnvKind + "-vnet");
-            ResourceNames.Add("VNetSubnet1", EnvironmentName("long") + "-" + EnvKind + "-" + SubnetRole1 + "-subnet");
-            ResourceNames.Add("NSG1", ResourceNames["VNetSubnet1"] + "-nsg");
-            ResourceNames.Add("VNetSubnet2", EnvironmentName("long") + "-" + EnvKind + "-" + SubnetRole2 + "-subnet");
-            ResourceNames.Add("NSG2", ResourceNames["VNetSubnet2"] + "-nsg");
-            ResourceNames.Add("Monitoring", EnvironmentName("short") + "-" + EnvKind + "-log");
-            ResourceNames.Add("KeyVault", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-KeyVault");
-            ResourceNames.Add("Automation", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-Automation");
-            ResourceNames.Add("Integration", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-Integration");
-            ResourceNames.Add("Storage", EnvironmentName("short")  + "storage");
-            ResourceNames.Add("VM1AS", EnvironmentName("VM", SubnetRole1, VMOs1) + "-as");
-            ResourceNames.Add("VM1", EnvironmentName("VM", SubnetRole1, VMOs1) + EnvKind[0] + counter.ToString("D2"));
-            ResourceNames.Add("VM1NIC", EnvironmentName("VM", SubnetRole1, VMOs1) + EnvKind[0] + counter.ToString("D2") + "-nic-" + counter.ToString("D2"));
-            ResourceNames.Add("VM1NSG", EnvironmentName("VM", SubnetRole1, VMOs1) + EnvKind[0] + counter.ToString("D2") + "-nsg");
-            ResourceNames.Add("VM2AS", EnvironmentName("VM", SubnetRole2, VMOs2) + "-as");
-            ResourceNames.Add("VM2", EnvironmentName("VM", SubnetRole2, VMOs2) + EnvKind[0] + counter.ToString("D2"));
-            ResourceNames.Add("VM2NIC", EnvironmentName("VM", SubnetRole2, VMOs2) + EnvKind[0] + counter.ToString("D2") + "-nic-" + counter.ToString("D2"));
-            ResourceNames.Add("VM2NSG", EnvironmentName("VM", SubnetRole2, VMOs2) + EnvKind[0] + counter.ToString("D2") + "-nsg");
-            ResourceNames.Add("OSDisk", ResourceNames["VM1"] + "-os-disk");
-            ResourceNames.Add("DataDisk", ResourceNames["VM1"] + "-data-disk-" + counter.ToString("D2"));
-            ResourceNames.Add("Elastic", EnvironmentName("long") + "-" + EnvKind + "-" + SubnetRole2 + "-pool");
-            ResourceNames.Add("SQLServName", EnvironmentName("long") + "-" + EnvKind + "-" + SubnetRole2 + "-server-" + counter.ToString("D2"));
-            ResourceNames.Add("DTBName1", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-" + Database1);
-            ResourceNames.Add("DTBName2", EnvironmentName("short").ToUpper() + "-" + EnvKind + "-" + Database2);
-            ResourceNames.Add("K8sName", EnvironmentName("long") + "-aks");
+            _resourceNames.Add("RgName", EnvironmentName("long") + "-" + _envKind + "-rg");
+            _resourceNames.Add("VNetName", EnvironmentName("long") + "-" + _envKind + "-vnet");
+            _resourceNames.Add("VNetSubnet1", EnvironmentName("long") + "-" + _envKind + "-" + _subnetRole1 + "-subnet");
+            _resourceNames.Add("NSG1", _resourceNames["VNetSubnet1"] + "-nsg");
+            _resourceNames.Add("VNetSubnet2", EnvironmentName("long") + "-" + _envKind + "-" + _subnetRole2 + "-subnet");
+            _resourceNames.Add("NSG2", _resourceNames["VNetSubnet2"] + "-nsg");
+            _resourceNames.Add("Monitoring", EnvironmentName("short") + "-" + _envKind + "-log");
+            _resourceNames.Add("KeyVault", EnvironmentName("short").ToUpper() + "-" + _envKind + "-KeyVault");
+            _resourceNames.Add("Automation", EnvironmentName("short").ToUpper() + "-" + _envKind + "-Automation");
+            _resourceNames.Add("Integration", EnvironmentName("short").ToUpper() + "-" + _envKind + "-Integration");
+            _resourceNames.Add("Storage", EnvironmentName("short")  + "storage");
+            _resourceNames.Add("VM1AS", EnvironmentName("VM", _subnetRole1, _vmOs1) + "-as");
+            _resourceNames.Add("VM1", EnvironmentName("VM", _subnetRole1, _vmOs1) + _envKind[0] + counter.ToString("D2"));
+            _resourceNames.Add("VM1NIC", EnvironmentName("VM", _subnetRole1, _vmOs1) + _envKind[0] + counter.ToString("D2") + "-nic-" + counter.ToString("D2"));
+            _resourceNames.Add("VM1NSG", EnvironmentName("VM", _subnetRole1, _vmOs1) + _envKind[0] + counter.ToString("D2") + "-nsg");
+            _resourceNames.Add("VM2AS", EnvironmentName("VM", _subnetRole2, _vmOs2) + "-as");
+            _resourceNames.Add("VM2", EnvironmentName("VM", _subnetRole2, _vmOs2) + _envKind[0] + counter.ToString("D2"));
+            _resourceNames.Add("VM2NIC", EnvironmentName("VM", _subnetRole2, _vmOs2) + _envKind[0] + counter.ToString("D2") + "-nic-" + counter.ToString("D2"));
+            _resourceNames.Add("VM2NSG", EnvironmentName("VM", _subnetRole2, _vmOs2) + _envKind[0] + counter.ToString("D2") + "-nsg");
+            _resourceNames.Add("OSDisk", _resourceNames["VM1"] + "-os-disk");
+            _resourceNames.Add("DataDisk", _resourceNames["VM1"] + "-data-disk-" + counter.ToString("D2"));
+            _resourceNames.Add("Elastic", EnvironmentName("long") + "-" + _envKind + "-" + _subnetRole2 + "-pool");
+            _resourceNames.Add("SQLServName", EnvironmentName("long") + "-" + _envKind + "-" + _subnetRole2 + "-server-" + counter.ToString("D2"));
+            _resourceNames.Add("DTBName1", EnvironmentName("short").ToUpper() + "-" + _envKind + "-" + _database1);
+            _resourceNames.Add("DTBName2", EnvironmentName("short").ToUpper() + "-" + _envKind + "-" + _database2);
+            _resourceNames.Add("K8sName", EnvironmentName("long") + "-aks");
             counter++;
         }
     }

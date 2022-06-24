@@ -5,11 +5,11 @@ using VFBlazor6._0.Utility;
 
 namespace VFBlazor6._0.Terraform
 {
-    public class DefaultTFTemplate1 : TerraformStack
+    internal class DefaultTFTemplate1 : TerraformStack
     {
         string[] _ips = new string[] { "111.111.111.000", "111.111.111.001" };
 
-        internal DefaultTFTemplate1(Construct scope, string id, NameGenerator ng) : base(scope, id)
+        internal DefaultTFTemplate1(Construct scope, string id, NameGenerator nameGen) : base(scope, id)
         {
             new AzurermProvider(this, "AzureRm", new AzurermProviderConfig
             {
@@ -18,19 +18,19 @@ namespace VFBlazor6._0.Terraform
 
             ResourceGroup RG = new ResourceGroup(this, "azurerm_resource_group", new ResourceGroupConfig
             {
-                Name = ng.GetResNames()["RgName"],
-                Location = ng.Region[1],
+                Name = nameGen.GetResNames()["RgName"],
+                Location = nameGen._region[1],
                 Tags = new Dictionary<string, string> {
-                    { "application", ng.EnvironmentName("long")},
-                    {"environment", ng.EnvironmentName("long", env:"env") }
+                    { "application", nameGen.EnvironmentName("long")},
+                    {"environment", nameGen.EnvironmentName("long", env:"env") }
                 }
             });
 
             StorageAccount SA = new StorageAccount(this, "azurerm_storage_account", new StorageAccountConfig
             {
                 Name = "test",
-                ResourceGroupName = ng.GetResNames()["RgName"],
-                Location = ng.Region[1],
+                ResourceGroupName = nameGen.GetResNames()["RgName"],
+                Location = nameGen._region[1],
 
                 AccountTier = "Standard",
                 AccountKind = "StorageV2",
@@ -41,7 +41,7 @@ namespace VFBlazor6._0.Terraform
                 {
                     DefaultAction = "Deny",
                     VirtualNetworkSubnetIds = new string[] { "durrr" },
-                    IpRules = _ips
+                    IpRules = new string[] { "111.111.111.000", "111.111.111.001" }
                 }
             });
 
@@ -54,19 +54,19 @@ namespace VFBlazor6._0.Terraform
 
             VirtualNetwork Vnet = new VirtualNetwork(this, "azurerm_virtual_network", new VirtualNetworkConfig
             {
-                Name = ng.GetResNames()["VNetName"],
-                Location = ng.Region[1],
+                Name = nameGen.GetResNames()["VNetName"],
+                Location = nameGen._region[1],
                 ResourceGroupName = RG.Name,
                 AddressSpace = new[] { "10.0.0.0/16" },
                 Tags = new Dictionary<string, string> {
-                    { "application", ng.EnvironmentName("long")},
-                    {"environment", ng.EnvironmentName("long", env:"env") }
+                    { "application", nameGen.EnvironmentName("long")},
+                    {"environment", nameGen.EnvironmentName("long", env:"env") }
                 }
             });
 
             Subnet Sbnet = new Subnet(this, "azurerm_subnet", new SubnetConfig
             {
-                Name = ng.GetResNames()["VNetSubnet1"],
+                Name = nameGen.GetResNames()["VNetSubnet1"],
                 AddressPrefixes = new string[] { "aks" },
                 VirtualNetworkName = Vnet.Name,
                 ResourceGroupName = RG.Name,
@@ -81,7 +81,7 @@ namespace VFBlazor6._0.Terraform
 
             new PrivateDnsZoneVirtualNetworkLink(this, "azurerm_private_dns_zone_virtual_network_link", new PrivateDnsZoneVirtualNetworkLinkConfig
             {
-                Name = ng.EnvironmentName("long", env: "env") + "",
+                Name = nameGen.EnvironmentName("long", env: "env") + "",
                 ResourceGroupName = RG.Name,
                 PrivateDnsZoneName = Pdz.Name,
                 VirtualNetworkId = Vnet.Id
@@ -89,8 +89,8 @@ namespace VFBlazor6._0.Terraform
 
             PrivateEndpoint Pe = new PrivateEndpoint(this, "azurerm_private_endpoint", new PrivateEndpointConfig
             {
-                Name = ng.EnvironmentName("long", env: "env"),
-                Location = ng.Region[1],
+                Name = nameGen.EnvironmentName("long", env: "env"),
+                Location = nameGen._region[1],
                 ResourceGroupName = RG.Name,
                 SubnetId = Sbnet.Id,
 
@@ -102,7 +102,7 @@ namespace VFBlazor6._0.Terraform
 
                 PrivateServiceConnection = new PrivateEndpointPrivateServiceConnection
                 {
-                    Name = ng.EnvironmentName("long", env: "env") + "-private-service-connection-file-share",
+                    Name = nameGen.EnvironmentName("long", env: "env") + "-private-service-connection-file-share",
                     PrivateConnectionResourceId = SA.Id,
                     IsManualConnection = false,
                 }
@@ -110,8 +110,8 @@ namespace VFBlazor6._0.Terraform
 
             KubernetesCluster K8sCluster = new KubernetesCluster(this, "azurerm_kubernetes_cluster", new KubernetesClusterConfig
             {
-                Name = ng.GetResNames()["K8sName"],
-                Location = ng.Region[1],
+                Name = nameGen.GetResNames()["K8sName"],
+                Location = nameGen._region[1],
                 DnsPrefix = "aks",
                 KubernetesVersion = "1.19.11",
                 ResourceGroupName = RG.Name,

@@ -61,7 +61,7 @@
                     </div>
                     <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Submit" Text="Generate" />
                     <RadzenButton IsBusy=@disabled ButtonType="ButtonType.Button" Click=@DownloadBat ButtonStyle="ButtonStyle.Secondary" Text="Get .bat" 
-                    MouseEnter="@(args => ShowTooltip3(args, new TooltipOptions(){ Duration = 10000, Position = TooltipPosition.Right }))" />
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Duration = 10000, Position = TooltipPosition.Right }))" />
                 </RadzenFieldset>
             </RadzenTemplateForm>
         </div>
@@ -83,10 +83,19 @@
 </div>
 
 @code {
-
-    void ShowTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the customer, no spaces", options);
-    void ShowTooltip2(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Please enter the three letter abbrevation of the solution, no spaces", options);
-    void ShowTooltip3(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "The .bat contains an automated plan script which initialises and plans for you", options);
+    async Task OnSubmit(Environment env)
+    {
+        Disable();
+        await Task.Yield();
+        Terraform.DefaultTFTemplate.Synthesise(new NameGenerator(env.userCustomer, env.userSolution, 
+            new string[] { env.userRegion, regionsDict[env.userRegion] }));
+        Utility.FileOps.ZipFiles(@".\cdktf.out\stacks", FileOps._zipLoc);
+        await Alert("The Terraform JSON plan has been generated, downloading...");
+        await DownloadFileFromStream("EnvironmentFiles.zip", FileOps._zipLoc);
+        FileOps.CleanFiles();
+        Enable();
+        await Task.Yield();
+    }
 
     bool busy = false;
     bool disabled = false;
@@ -112,18 +121,7 @@
         navHelper.NavigateTo("customtf");
     }
 
-    async Task OnSubmit(Environment env)
-    {
-        Disable();
-        await Task.Yield();
-        Terraform.DefaultTFTemplate.Synthesise(new NameGenerator(env.userCustomer, env.userSolution, new string[] { env.userRegion, regionsDict[env.userRegion] }));
-        //FileOps.MoveFile(FileOps._jsonOldLoc, FileOps._jsonNewLoc);
-        await Alert("The Terraform JSON plan has been generated, downloading...");
-       // await DownloadFileFromStream("cdk.tf.json", FileOps._jsonNewLoc);
-        FileOps.CleanFiles();
-        Enable();
-        await Task.Yield();
-    }
+    
 
     async Task DownloadBat()
     {
@@ -134,9 +132,9 @@
 
     }
 
-    private async Task Alert(string msg)
+    async Task Alert(string message)
     {
-        await JsRuntime.InvokeVoidAsync("alert", msg);
+        await JsRuntime.InvokeVoidAsync("alert", message);
     }
 
     void ShowNotification(NotificationMessage message)
@@ -154,15 +152,16 @@
         await Alert("Please check if everything is correct");
     }
 
-    private async Task DownloadFileFromStream(string file, string Fileloc)
+    private async Task DownloadFileFromStream(string file, string fileloc)
     {
-        var fileStream = FileOps.GetFileStream(Fileloc);
+        var fileStream = FileOps.GetFileStream(fileloc);
         var fileName = file;
 
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
+        void ShowTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "The .bat contains an automated plan script which initialises and plans for you", options);
 
     class Environment
     {

@@ -19,16 +19,17 @@ goto end
 
 :yes
 az login
-Terraform -help || ECHO Please make sure that Terraform is installed! Otherwise, just drop the .exe in the local folder and rerun the .bat file timeout && pause 
+Terraform -help || ECHO Please make sure that Terraform is installed! Otherwise, just drop the .exe in the local folder and rerun the .bat file timeout 
 Terraform init 
 Terraform plan
 GOTO end
 
 :no
-Terraform -help || ECHO Please make sure that Terraform is installed! Otherwise, just drop the .exe in the local folder and rerun the .bat file timeout && pause 
+Terraform -help || ECHO Please make sure that Terraform is installed! Otherwise, just drop the .exe in the local folder and rerun the .bat file timeout 
 Terraform init 
 Terraform plan
 goto end
 
-:end 
+:end
+pause
 Exit /B n

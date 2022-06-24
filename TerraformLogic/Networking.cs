@@ -12,9 +12,13 @@ namespace VFBlazor6._0.TerraformLogic
         internal readonly PrivateDnsZone _privateDnsZone;
         internal readonly PrivateEndpoint _privateEndpoint;
         internal readonly PrivateDnsZoneVirtualNetworkLink _privateDnsZoneVirtualNetworkLink;
-
-        internal readonly ResourceGroup _resourceGroup;
-
+        /// <summary>
+        /// The Networking class contains all the definitions of the Azure resources which are directly related to networking
+        /// </summary>
+        /// <param name="scope">an object of class Construct</param>
+        /// <param name="id">a string identifier</param>
+        /// <param name="ng">an object of class NameGenerator</param>
+        /// <param name="rg">an object of class ResourceGroups</param>
         internal Networking(Construct scope, string id, NameGenerator ng, ResourceGroups rg) : base(scope, id)
         {
             AzurermProvider azurermProvider = new(this, "AzureRm", new AzurermProviderConfig
@@ -25,7 +29,7 @@ namespace VFBlazor6._0.TerraformLogic
             VirtualNetwork virtualNetwork = new (this, "azurerm_virtual_network", new VirtualNetworkConfig
             {
                 Name = ng.GetResNames()["VNetName"],
-                Location = ng.Region[1],
+                Location = ng._region[1],
                 ResourceGroupName = rg._resourceGroup.Name,
                 AddressSpace = new[] { "10.0.0.0/16" },
                 Tags = new Dictionary<string, string> {
@@ -60,7 +64,7 @@ namespace VFBlazor6._0.TerraformLogic
             PrivateEndpoint privateEndpoint = new PrivateEndpoint(this, "azurerm_private_endpoint", new PrivateEndpointConfig
             {
                 Name = ng.EnvironmentName("long", env: "env"),
-                Location = ng.Region[1],
+                Location = ng._region[1],
                 ResourceGroupName = rg._resourceGroup.Name,
                 SubnetId = subnet.Id,
 

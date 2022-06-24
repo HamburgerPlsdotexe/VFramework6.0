@@ -9,7 +9,14 @@ namespace VFBlazor6._0.TerraformLogic
     {
         internal readonly KubernetesCluster _kubernetesCluster;
         internal readonly KubernetesClusterNodePool _kubernetesClusterNodePool;
-
+        /// <summary>
+        /// The Kubernetes class contains all the definitions of the Azure resources which are directly related to Kubernetes
+        /// </summary>
+        /// <param name="scope">an object of class Construct</param>
+        /// <param name="id">a string identifier</param>
+        /// <param name="ng">an object of class NameGenerator</param>
+        /// <param name="nw">an object of class Networking</param>
+        /// <param name="rg">an object of class ResourceGroups</param>
         internal Kubernetes(Construct scope, string id, NameGenerator ng, Networking nw, ResourceGroups rg) : base(scope, id)
         {
             AzurermProvider azurermProvider = new(this, "AzureRm", new AzurermProviderConfig
@@ -20,7 +27,7 @@ namespace VFBlazor6._0.TerraformLogic
             KubernetesCluster kubernetesCluster = new(this, "azurerm_kubernetes_cluster", new KubernetesClusterConfig
             {
                 Name = ng.GetResNames()["K8sName"],
-                Location = ng.Region[1],
+                Location = ng._region[1],
                 DnsPrefix = "aks",
                 KubernetesVersion = "1.19.11",
                 ResourceGroupName = rg._resourceGroup.Name,
